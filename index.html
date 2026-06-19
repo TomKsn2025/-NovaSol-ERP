@@ -2,14 +2,11 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NovaSol ERP V8.0</title>
-  
-  <!-- CSS Dependencies -->
+  <title>NovaSol ERP V8.1</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     body { font-family: 'Chakra Petch', sans-serif; background: #f4f6f9; min-height: 100vh; display: flex; flex-direction: column; }
@@ -28,7 +25,6 @@
     ::-webkit-scrollbar-track { background: #f1f1f1; }
     ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
 
-    /* Dashboard KPI Cards */
     .kpi-card { border-radius: 14px; padding: 18px 22px; color: #fff; position: relative; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
     .kpi-card::after { content: ''; position: absolute; right: -18px; top: -18px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,0.1); }
     .kpi-card .kpi-icon { font-size: 2rem; opacity: 0.85; }
@@ -44,11 +40,8 @@
     .kpi-profit-pos { background: linear-gradient(135deg, #145a32, #1e8449); }
     .kpi-profit-neg { background: linear-gradient(135deg, #6e2f1a, #ca6f1e); }
 
-    /* Project table in dashboard */
     .proj-table td, .proj-table th { vertical-align: middle; font-size: 0.88rem; }
     .profit-pill { padding: 3px 10px; border-radius: 20px; font-size: 0.82rem; font-weight: 600; }
-
-    /* Capital injection badge in contract */
     .capital-badge { background: #f3e5f5; color: #6a1b9a; border-radius: 8px; padding: 2px 8px; font-size: 0.8rem; font-weight: 600; }
 
     @media print {
@@ -58,17 +51,22 @@
       #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
       #payslipPrintArea, #payslipPrintArea * { visibility: visible; }
       #payslipPrintArea { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
-      .modal { position: absolute; left: 0; top: 0; margin: 0; padding: 0; }
     }
   </style>
 </head>
 <body>
 
-<!-- ==================== LOGIN ==================== -->
+<!-- ===================== CONFIG ===================== -->
+<script>
+  // ⚠️ ใส่ URL ของ Google Apps Script Web App ตรงนี้
+  // วิธีหา: GAS → Deploy → Manage deployments → Copy Web app URL
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwGm5maZAt5dHFYKtOzFYYZ9jtzt6YDTgMVmbNvz25qfLcsnsBlPA0tuEAspaI9MYt-/exec';
+</script>
+
 <div id="loginOverlay">
   <div class="login-box shadow">
     <img src="https://i.postimg.cc/FHGkmGKB/NOVASOL-1/logo.png" style="width: 80px; margin-bottom: 15px;">
-    <h3 class="fw-bold mb-4">NovaSol ERP V8.0</h3>
+    <h3 class="fw-bold mb-4">NovaSol ERP V8.1</h3>
     <form id="loginForm">
       <input type="text" id="loginUser" class="form-control mb-3" placeholder="Username" required>
       <input type="password" id="loginPass" class="form-control mb-4" placeholder="Password" required>
@@ -77,18 +75,16 @@
   </div>
 </div>
 
-<!-- ==================== LOADER ==================== -->
 <div class="loading" id="loader">
   <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
   <div class="loading-text">กำลังประมวลผลข้อมูล...</div>
 </div>
 
-<!-- ==================== APP CONTAINER ==================== -->
 <div id="appContainer" style="display:none; flex: 1; flex-direction: column;">
   <nav class="navbar navbar-dark mb-4 px-4 no-print">
     <span class="navbar-brand d-flex align-items-center">
       <img src="https://i.postimg.cc/FHGkmGKB/NOVASOL-1/logo.png" class="nav-logo">
-      <span>ระบบบริหารจัดการวัสดุและบุคคล (GitHub Pages)</span>
+      <span>ระบบบริหารจัดการวัสดุและบุคคล</span>
     </span>
     <div class="text-white">
       <span id="userDisplay" class="me-3"></span>
@@ -101,18 +97,13 @@
 
     <div class="tab-content pb-4">
 
-      <!-- ==================== DASHBOARD TAB ==================== -->
+      <!-- DASHBOARD TAB -->
       <div class="tab-pane fade" id="dashboardTab">
-        <!-- KPI บล็อกด้านบน -->
         <div class="row g-3 mb-3">
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-revenue">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">รายรับตามสัญญา (รวม)</div>
-                  <div class="kpi-value mt-1" id="dashContractRevenue">0.00</div>
-                  <small style="opacity:.75;font-size:.72rem;">มูลค่าสัญญาทั้งหมด</small>
-                </div>
+                <div><div class="kpi-label">รายรับตามสัญญา (รวม)</div><div class="kpi-value mt-1" id="dashContractRevenue">0.00</div><small style="opacity:.75;font-size:.72rem;">มูลค่าสัญญาทั้งหมด</small></div>
                 <i class="fas fa-file-contract kpi-icon"></i>
               </div>
             </div>
@@ -120,11 +111,7 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-received">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">รายรับจริง (รับเงินแล้ว)</div>
-                  <div class="kpi-value mt-1" id="dashRealRevenue">0.00</div>
-                  <small style="opacity:.75;font-size:.72rem;">เงินค่างวดที่ได้รับจริง</small>
-                </div>
+                <div><div class="kpi-label">รายรับจริง (รับเงินแล้ว)</div><div class="kpi-value mt-1" id="dashRealRevenue">0.00</div><small style="opacity:.75;font-size:.72rem;">เงินค่างวดที่ได้รับจริง</small></div>
                 <i class="fas fa-hand-holding-usd kpi-icon"></i>
               </div>
             </div>
@@ -132,11 +119,7 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-capital">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">เพิ่มทุน (ระหว่างสัญญา)</div>
-                  <div class="kpi-value mt-1" id="dashCapital">0.00</div>
-                  <small style="opacity:.75;font-size:.72rem;">เงินทุนเพิ่มเติมทั้งหมด</small>
-                </div>
+                <div><div class="kpi-label">เพิ่มทุน (ระหว่างสัญญา)</div><div class="kpi-value mt-1" id="dashCapital">0.00</div><small style="opacity:.75;font-size:.72rem;">เงินทุนเพิ่มเติมทั้งหมด</small></div>
                 <i class="fas fa-piggy-bank kpi-icon"></i>
               </div>
             </div>
@@ -144,26 +127,17 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-expense">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">รายจ่ายรวมทั้งหมด</div>
-                  <div class="kpi-value mt-1" id="dashExpense">0.00</div>
-                  <small style="opacity:.75;font-size:.72rem;">แรง + วัสดุ + อื่นๆ</small>
-                </div>
+                <div><div class="kpi-label">รายจ่ายรวมทั้งหมด</div><div class="kpi-value mt-1" id="dashExpense">0.00</div><small style="opacity:.75;font-size:.72rem;">แรง + วัสดุ + อื่นๆ</small></div>
                 <i class="fas fa-receipt kpi-icon"></i>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- รายจ่ายแยกประเภท + กำไรขาดทุน -->
         <div class="row g-3 mb-4">
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-labor">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">ค่าแรง (เงินเดือน)</div>
-                  <div class="kpi-value mt-1" id="dashLaborCost">0.00</div>
-                </div>
+                <div><div class="kpi-label">ค่าแรง (เงินเดือน)</div><div class="kpi-value mt-1" id="dashLaborCost">0.00</div></div>
                 <i class="fas fa-users kpi-icon"></i>
               </div>
             </div>
@@ -171,10 +145,7 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-material">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">ค่าวัสดุ (จ่ายออก)</div>
-                  <div class="kpi-value mt-1" id="dashMaterialCost">0.00</div>
-                </div>
+                <div><div class="kpi-label">ค่าวัสดุ (จ่ายออก)</div><div class="kpi-value mt-1" id="dashMaterialCost">0.00</div></div>
                 <i class="fas fa-boxes kpi-icon"></i>
               </div>
             </div>
@@ -182,10 +153,7 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-other">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label">รายจ่ายบริหาร/อื่นๆ</div>
-                  <div class="kpi-value mt-1" id="dashOtherCost">0.00</div>
-                </div>
+                <div><div class="kpi-label">รายจ่ายบริหาร/อื่นๆ</div><div class="kpi-value mt-1" id="dashOtherCost">0.00</div></div>
                 <i class="fas fa-file-invoice kpi-icon"></i>
               </div>
             </div>
@@ -193,18 +161,12 @@
           <div class="col-6 col-md-3">
             <div class="kpi-card kpi-profit-pos" id="dashProfitCard">
               <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <div class="kpi-label" id="dashProfitLabel">กำไร/ขาดทุน (จากเงินรับจริง)</div>
-                  <div class="kpi-value mt-1" id="dashProfit">0.00</div>
-                  <small id="dashProfitNote" style="opacity:.75;font-size:.72rem;">รายรับจริง - รายจ่ายรวม</small>
-                </div>
+                <div><div class="kpi-label">กำไร/ขาดทุน (จากเงินรับจริง)</div><div class="kpi-value mt-1" id="dashProfit">0.00</div><small id="dashProfitNote" style="opacity:.75;font-size:.72rem;">รายรับจริง - รายจ่ายรวม</small></div>
                 <i class="fas fa-chart-line kpi-icon" id="dashProfitIcon"></i>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- กราฟ + ตารางสรุปโครงการ -->
         <div class="row g-3 mb-3">
           <div class="col-md-7">
             <div class="card h-100">
@@ -220,33 +182,19 @@
               <div class="card-header bg-white fw-bold">📋 สรุปผลประกอบการแต่ละโครงการ</div>
               <div class="card-body p-0" style="overflow-y:auto; max-height:340px;">
                 <table class="table proj-table mb-0" id="projSummaryTable">
-                  <thead class="table-light" style="position:sticky;top:0;">
-                    <tr>
-                      <th>โครงการ</th>
-                      <th class="text-end">รับจริง</th>
-                      <th class="text-end">จ่าย</th>
-                      <th class="text-center">ผล</th>
-                    </tr>
-                  </thead>
+                  <thead class="table-light" style="position:sticky;top:0;"><tr><th>โครงการ</th><th class="text-end">รับจริง</th><th class="text-end">จ่าย</th><th class="text-center">ผล</th></tr></thead>
                   <tbody id="projSummaryBody"></tbody>
                 </table>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- ประวัติรับค่างวด + ประวัติเพิ่มทุน -->
         <div class="row g-3">
           <div class="col-md-6">
             <div class="card">
               <div class="card-header bg-white fw-bold">💵 ประวัติรับเงินค่างวดงาน</div>
               <div class="card-body p-0" style="max-height:220px;overflow-y:auto;">
-                <table class="table table-sm mb-0" id="revenueDetailTable">
-                  <thead class="table-success" style="position:sticky;top:0;">
-                    <tr><th>วันที่</th><th>รายการ</th><th>โครงการ</th><th class="text-end">จำนวนเงิน</th></tr>
-                  </thead>
-                  <tbody id="revenueDetailBody"></tbody>
-                </table>
+                <table class="table table-sm mb-0"><thead class="table-success" style="position:sticky;top:0;"><tr><th>วันที่</th><th>รายการ</th><th>โครงการ</th><th class="text-end">จำนวนเงิน</th></tr></thead><tbody id="revenueDetailBody"></tbody></table>
               </div>
             </div>
           </div>
@@ -254,32 +202,23 @@
             <div class="card">
               <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
                 <span>💜 ประวัติการเพิ่มทุน</span>
-                <button class="btn btn-sm btn-outline-purple" style="border-color:#8e44ad;color:#8e44ad;" onclick="openCapitalModal()">
-                  <i class="fas fa-plus"></i> เพิ่มทุน
-                </button>
+                <button class="btn btn-sm btn-outline-purple" style="border-color:#8e44ad;color:#8e44ad;" onclick="openCapitalModal()"><i class="fas fa-plus"></i> เพิ่มทุน</button>
               </div>
               <div class="card-body p-0" style="max-height:220px;overflow-y:auto;">
-                <table class="table table-sm mb-0" id="capitalDetailTable">
-                  <thead class="table-light" style="position:sticky;top:0;">
-                    <tr><th>วันที่</th><th>แหล่งที่มา</th><th>โครงการ/หมายเหตุ</th><th class="text-end">จำนวนเงิน</th><th></th></tr>
-                  </thead>
-                  <tbody id="capitalDetailBody"></tbody>
-                </table>
+                <table class="table table-sm mb-0"><thead class="table-light" style="position:sticky;top:0;"><tr><th>วันที่</th><th>แหล่งที่มา</th><th>โครงการ/หมายเหตุ</th><th class="text-end">จำนวนเงิน</th><th></th></tr></thead><tbody id="capitalDetailBody"></tbody></table>
               </div>
             </div>
           </div>
         </div>
-      </div><!-- /dashboardTab -->
+      </div>
 
-      <!-- ==================== CONTRACTS TAB ==================== -->
+      <!-- CONTRACTS TAB -->
       <div class="tab-pane fade" id="contractsTab">
         <div class="card p-3">
           <div class="d-flex justify-content-between mb-3">
             <div class="d-flex gap-2">
               <button class="btn btn-primary" onclick="openContractModal()"><i class="fas fa-plus"></i> เพิ่มสัญญา</button>
-              <button class="btn btn-outline-purple" style="border-color:#8e44ad;color:#8e44ad;" onclick="openCapitalModal()">
-                <i class="fas fa-piggy-bank"></i> บันทึกเพิ่มทุน
-              </button>
+              <button class="btn btn-outline-purple" style="border-color:#8e44ad;color:#8e44ad;" onclick="openCapitalModal()"><i class="fas fa-piggy-bank"></i> บันทึกเพิ่มทุน</button>
             </div>
             <button class="btn btn-outline-secondary btn-sm" onclick="loadData()"><i class="fas fa-sync"></i> รีเฟรช</button>
           </div>
@@ -287,7 +226,7 @@
         </div>
       </div>
 
-      <!-- ==================== WORKERS TAB ==================== -->
+      <!-- WORKERS TAB -->
       <div class="tab-pane fade" id="workersTab">
         <div class="card p-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
@@ -301,7 +240,7 @@
         </div>
       </div>
 
-      <!-- ==================== PAYROLL TAB ==================== -->
+      <!-- PAYROLL TAB -->
       <div class="tab-pane fade" id="payrollTab">
         <div class="card p-3">
           <div class="row mb-3 align-items-end">
@@ -320,21 +259,15 @@
             </div>
           </div>
           <div class="alert alert-light border border-success d-flex justify-content-around py-3 mb-4 shadow-sm bg-white rounded-3">
-            <div class="text-center">
-              <small class="text-muted fw-bold">ยอดจ่ายสุทธิ <span id="lblPayrollMonth" class="text-dark"></span></small>
-              <h4 class="text-success fw-bold mb-0 mt-1" id="payrollSumMonth">0.00</h4>
-            </div>
+            <div class="text-center"><small class="text-muted fw-bold">ยอดจ่ายสุทธิ <span id="lblPayrollMonth" class="text-dark"></span></small><h4 class="text-success fw-bold mb-0 mt-1" id="payrollSumMonth">0.00</h4></div>
             <div class="vr bg-success" style="width: 2px;"></div>
-            <div class="text-center">
-              <small class="text-muted fw-bold">ยอดรวมตลอดปี <span id="lblPayrollYear" class="text-dark"></span></small>
-              <h4 class="text-primary fw-bold mb-0 mt-1" id="payrollSumYear">0.00</h4>
-            </div>
+            <div class="text-center"><small class="text-muted fw-bold">ยอดรวมตลอดปี <span id="lblPayrollYear" class="text-dark"></span></small><h4 class="text-primary fw-bold mb-0 mt-1" id="payrollSumYear">0.00</h4></div>
           </div>
           <table id="payrollTable" class="table table-striped w-100"></table>
         </div>
       </div>
 
-      <!-- ==================== SUPPLIES TAB ==================== -->
+      <!-- SUPPLIES TAB -->
       <div class="tab-pane fade" id="suppliesTab">
         <div class="card p-3">
           <div class="row mb-3 align-items-end">
@@ -363,7 +296,7 @@
         </div>
       </div>
 
-      <!-- ==================== REQUESTS TAB ==================== -->
+      <!-- REQUESTS TAB -->
       <div class="tab-pane fade" id="requestsTab">
         <div class="card p-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
@@ -389,7 +322,7 @@
         </div>
       </div>
 
-      <!-- ==================== REPORTS TAB ==================== -->
+      <!-- REPORTS TAB -->
       <div class="tab-pane fade" id="reportsTab">
         <div class="row">
           <div class="col-md-12 mb-4">
@@ -423,7 +356,7 @@
         </div>
       </div>
 
-      <!-- ==================== USERS TAB ==================== -->
+      <!-- USERS TAB -->
       <div class="tab-pane fade" id="usersTab">
         <div class="card p-3">
           <button class="btn btn-dark mb-3 w-auto" onclick="openUserModal()">เพิ่มผู้ใช้</button>
@@ -442,33 +375,16 @@
   </footer>
 </div>
 
-<!-- ==================== WORKER MODAL ==================== -->
+<!-- WORKER MODAL -->
 <div class="modal fade" id="workerModal">
   <div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header bg-info text-white">
-      <h5 class="modal-title"><i class="fas fa-user-edit"></i> ข้อมูลคนงาน</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-info text-white"><h5 class="modal-title"><i class="fas fa-user-edit"></i> ข้อมูลคนงาน</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <form id="workerForm"><input type="hidden" id="w_id">
-        <div class="row mb-2">
-          <div class="col-md-6"><label>ชื่อ - นามสกุล</label><input type="text" id="w_name" class="form-control" required></div>
-          <div class="col-md-6"><label>เลขบัตรประชาชน</label><input type="text" id="w_idcard" class="form-control" maxlength="13"></div>
-        </div>
-        <div class="row mb-2">
-          <div class="col-md-4"><label>วัน/เดือน/ปีเกิด</label><input type="text" id="w_dob" class="form-control" placeholder="เช่น 12 ส.ค. 2530"></div>
-          <div class="col-md-4"><label>เบอร์โทรศัพท์</label><input type="text" id="w_phone" class="form-control"></div>
-          <div class="col-md-4"><label>ตำแหน่ง</label><select id="w_role" class="form-select"><option>คนงานทั่วไป</option><option>ช่างเทคนิค</option><option>หัวหน้างาน</option></select></div>
-        </div>
-        <div class="row mb-2">
-          <div class="col-md-6"><label>วันที่เริ่มงาน</label><input type="date" id="w_start" class="form-control" required></div>
-          <div class="col-md-6"><label>วันที่สิ้นสุดสภาพ (ถ้ามี)</label><input type="date" id="w_end" class="form-control"></div>
-        </div>
-        <div class="row mb-2">
-          <div class="col-md-4"><label>ธนาคาร</label><input type="text" id="w_bankname" class="form-control"></div>
-          <div class="col-md-4"><label>เลขบัญชี</label><input type="text" id="w_bankacc" class="form-control"></div>
-          <div class="col-md-4"><label>ฐานเงินเดือน/ค่าแรง</label><input type="number" id="w_base" class="form-control" required></div>
-        </div>
+        <div class="row mb-2"><div class="col-md-6"><label>ชื่อ - นามสกุล</label><input type="text" id="w_name" class="form-control" required></div><div class="col-md-6"><label>เลขบัตรประชาชน</label><input type="text" id="w_idcard" class="form-control" maxlength="13"></div></div>
+        <div class="row mb-2"><div class="col-md-4"><label>วัน/เดือน/ปีเกิด</label><input type="text" id="w_dob" class="form-control" placeholder="เช่น 12 ส.ค. 2530"></div><div class="col-md-4"><label>เบอร์โทรศัพท์</label><input type="text" id="w_phone" class="form-control"></div><div class="col-md-4"><label>ตำแหน่ง</label><select id="w_role" class="form-select"><option>คนงาน</option><option>หัวหน้างาน</option></select></div></div>
+        <div class="row mb-2"><div class="col-md-6"><label>วันที่เริ่มงาน</label><input type="date" id="w_start" class="form-control" required></div><div class="col-md-6"><label>วันที่สิ้นสุดสภาพ (ถ้ามี)</label><input type="date" id="w_end" class="form-control"></div></div>
+        <div class="row mb-2"><div class="col-md-4"><label>ธนาคาร</label><input type="text" id="w_bankname" class="form-control"></div><div class="col-md-4"><label>เลขบัญชี</label><input type="text" id="w_bankacc" class="form-control"></div><div class="col-md-4"><label>ฐานเงินเดือน/ค่าแรง</label><input type="number" id="w_base" class="form-control" required></div></div>
         <div class="mb-3"><label>สถานะ</label><select id="w_status" class="form-select"><option>ทำงานอยู่</option><option>ลาออก</option></select></div>
         <button type="submit" class="btn btn-info text-white w-100">บันทึกข้อมูล</button>
       </form>
@@ -476,34 +392,22 @@
   </div></div>
 </div>
 
-<!-- ==================== PAYROLL MODAL ==================== -->
+<!-- PAYROLL MODAL -->
 <div class="modal fade" id="payrollModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-success text-white">
-      <h5 class="modal-title"><i class="fas fa-calculator"></i> คำนวณเงินเดือน</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-success text-white"><h5 class="modal-title"><i class="fas fa-calculator"></i> คำนวณเงินเดือน</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <form id="payrollForm"><input type="hidden" id="p_id">
         <div class="mb-2"><label>วันที่จ่าย / งวดเดือน</label><input type="date" id="p_date" class="form-control" required></div>
         <div class="mb-2"><label>เลือกพนักงาน</label><select id="p_worker" class="form-select" required onchange="fetchWorkerBaseWage()"></select></div>
         <div class="card p-2 bg-light mb-2">
           <h6 class="fw-bold text-success">รายรับ (+)</h6>
-          <div class="row mb-1">
-            <div class="col"><label class="small">ค่าแรงฐาน</label><input type="number" id="p_base" class="form-control form-control-sm pr-calc" required></div>
-            <div class="col"><label class="small">ค่าตำแหน่ง</label><input type="number" id="p_pos" class="form-control form-control-sm pr-calc" value="0"></div>
-          </div>
-          <div class="row mb-1">
-            <div class="col"><label class="small">รายได้อื่น/โอที</label><input type="number" id="p_other_inc" class="form-control form-control-sm pr-calc" value="0"></div>
-            <div class="col"><label class="small fw-bold">รวมรายรับ</label><input type="number" id="p_gross" class="form-control form-control-sm bg-white" readonly></div>
-          </div>
+          <div class="row mb-1"><div class="col"><label class="small">ค่าแรงฐาน</label><input type="number" id="p_base" class="form-control form-control-sm pr-calc" required></div><div class="col"><label class="small">ค่าตำแหน่ง</label><input type="number" id="p_pos" class="form-control form-control-sm pr-calc" value="0"></div></div>
+          <div class="row mb-1"><div class="col"><label class="small">รายได้อื่น/โอที</label><input type="number" id="p_other_inc" class="form-control form-control-sm pr-calc" value="0"></div><div class="col"><label class="small fw-bold">รวมรายรับ</label><input type="number" id="p_gross" class="form-control form-control-sm bg-white" readonly></div></div>
         </div>
         <div class="card p-2 bg-light border-danger mb-2">
           <h6 class="fw-bold text-danger">รายหัก (-)</h6>
-          <div class="row mb-1">
-            <div class="col"><label class="small">หักภาษี 3%</label><input type="number" id="p_tax" class="form-control form-control-sm pr-calc-manual"></div>
-            <div class="col"><label class="small">หักประกันสังคม 5%</label><input type="number" id="p_sso" class="form-control form-control-sm pr-calc-manual"></div>
-          </div>
+          <div class="row mb-1"><div class="col"><label class="small">หักภาษี 3%</label><input type="number" id="p_tax" class="form-control form-control-sm pr-calc-manual"></div><div class="col"><label class="small">หักประกันสังคม 5%</label><input type="number" id="p_sso" class="form-control form-control-sm pr-calc-manual"></div></div>
           <div class="mb-1"><label class="small">หักอื่นๆ (เบิกล่วงหน้า/ขาดงาน)</label><input type="number" id="p_other_ded" class="form-control form-control-sm pr-calc" value="0"></div>
         </div>
         <div class="alert alert-warning p-2 d-flex justify-content-between align-items-center mb-2">
@@ -518,7 +422,7 @@
   </div></div>
 </div>
 
-<!-- ==================== PAYSLIP MODAL ==================== -->
+<!-- PAYSLIP MODAL -->
 <div class="modal fade" id="payslipModal">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -530,32 +434,18 @@
       <div class="modal-body" id="payslipPrintArea">
         <div class="border border-2 border-dark p-4 mx-auto" style="max-width: 700px; position: relative; min-height: 200px; background: white;">
           <div class="d-flex justify-content-between align-items-center border-bottom border-dark pb-3 mb-3">
-            <div style="width: 100px; text-align: left;">
-              <img src="https://i.postimg.cc/FHGkmGKB/NOVASOL-1/logo.png" style="max-width: 100%; max-height: 80px; object-fit: contain;">
-            </div>
-            <div class="text-center flex-grow-1">
-              <h4 class="fw-bold mb-1">หจก.โนวาโวล (NovaSol)</h4>
-              <h5 class="mb-0">ใบแจ้งเงินเดือน (Payslip)</h5>
-            </div>
+            <div style="width: 100px; text-align: left;"><img src="https://i.postimg.cc/FHGkmGKB/NOVASOL-1/logo.png" style="max-width: 100%; max-height: 80px; object-fit: contain;"></div>
+            <div class="text-center flex-grow-1"><h4 class="fw-bold mb-1">หจก.โนวาโวล (NovaSol)</h4><h5 class="mb-0">ใบแจ้งเงินเดือน (Payslip)</h5></div>
             <div style="width: 100px;"></div>
           </div>
-
           <div class="row mb-3">
-            <div class="col-6">
-              <p class="mb-1"><strong>ชื่อ-สกุล:</strong> <span id="slip_name"></span></p>
-              <p class="mb-1"><strong>ตำแหน่ง:</strong> <span id="slip_role"></span></p>
-            </div>
-            <div class="col-6 text-end">
-              <p class="mb-1"><strong>งวดวันที่:</strong> <span id="slip_date"></span></p>
-              <p class="mb-1"><strong>ธนาคาร/เลขบัญชี:</strong> <span id="slip_bank"></span></p>
-            </div>
+            <div class="col-6"><p class="mb-1"><strong>ชื่อ-สกุล:</strong> <span id="slip_name"></span></p><p class="mb-1"><strong>ตำแหน่ง:</strong> <span id="slip_role"></span></p></div>
+            <div class="col-6 text-end"><p class="mb-1"><strong>งวดวันที่:</strong> <span id="slip_date"></span></p><p class="mb-1"><strong>ธนาคาร/เลขบัญชี:</strong> <span id="slip_bank"></span></p></div>
           </div>
           <div class="row">
             <div class="col-6 pe-0">
               <table class="table table-bordered border-dark mb-0">
-                <thead class="table-light border-dark">
-                  <tr><th colspan="2" class="text-center text-success">รายการได้ (Earnings)</th></tr>
-                </thead>
+                <thead class="table-light border-dark"><tr><th colspan="2" class="text-center text-success">รายการได้ (Earnings)</th></tr></thead>
                 <tbody>
                   <tr><td>เงินเดือน/ค่าจ้าง</td><td class="text-end" id="slip_base"></td></tr>
                   <tr><td>ค่าตำแหน่ง</td><td class="text-end" id="slip_pos"></td></tr>
@@ -566,9 +456,7 @@
             </div>
             <div class="col-6 ps-0">
               <table class="table table-bordered border-dark mb-0 border-start-0">
-                <thead class="table-light border-dark">
-                  <tr><th colspan="2" class="text-center text-danger">รายการหัก (Deductions)</th></tr>
-                </thead>
+                <thead class="table-light border-dark"><tr><th colspan="2" class="text-center text-danger">รายการหัก (Deductions)</th></tr></thead>
                 <tbody>
                   <tr><td>ภาษี หัก ณ ที่จ่าย 3%</td><td class="text-end" id="slip_tax"></td></tr>
                   <tr><td>ประกันสังคม 5%</td><td class="text-end" id="slip_sso"></td></tr>
@@ -578,13 +466,8 @@
               </table>
             </div>
           </div>
-          <div class="border border-dark border-top-0 p-2 text-center bg-light">
-            <h5 class="fw-bold mb-0">เงินได้สุทธิ (Net Pay): <span id="slip_net" class="text-decoration-underline ms-2"></span> บาท</h5>
-          </div>
-          <div class="mt-2 text-start px-2">
-            <p class="mb-0" style="font-size: 0.9rem;"><strong>หมายเหตุ:</strong> <span id="slip_note" class="text-danger">-</span></p>
-          </div>
-
+          <div class="border border-dark border-top-0 p-2 text-center bg-light"><h5 class="fw-bold mb-0">เงินได้สุทธิ (Net Pay): <span id="slip_net" class="text-decoration-underline ms-2"></span> บาท</h5></div>
+          <div class="mt-2 text-start px-2"><p class="mb-0" style="font-size: 0.9rem;"><strong>หมายเหตุ:</strong> <span id="slip_note" class="text-danger">-</span></p></div>
           <div class="row mt-5 text-center">
             <div class="col-6"><p>.......................................................</p><p>ผู้จ่ายเงิน</p></div>
             <div class="col-6"><p>.......................................................</p><p>ผู้รับเงิน</p></div>
@@ -595,13 +478,10 @@
   </div>
 </div>
 
-<!-- ==================== EVALUATE MODAL ==================== -->
+<!-- EVALUATE MODAL -->
 <div class="modal fade" id="evaluateModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-primary text-white">
-      <h5 class="modal-title"><i class="fas fa-calculator"></i> ประเมินการใช้วัสดุ</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fas fa-calculator"></i> ประเมินการใช้วัสดุ</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <div class="mb-2"><label>เลือกวัสดุ</label><input type="text" id="ev_item" class="form-control" list="materialOptions" required></div>
       <div class="mb-3"><label>จำนวนวันที่ทำงาน (เพื่อประเมิน)</label><input type="number" id="ev_days" class="form-control" value="1" required></div>
@@ -611,13 +491,10 @@
   </div></div>
 </div>
 
-<!-- ==================== REQUEST MODAL ==================== -->
+<!-- REQUEST MODAL -->
 <div class="modal fade" id="requestModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-warning">
-      <h5 class="modal-title">แจ้งขอวัสดุ</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-warning"><h5 class="modal-title">แจ้งขอวัสดุ</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <form id="requestForm">
         <input type="hidden" id="r_id">
@@ -630,13 +507,10 @@
   </div></div>
 </div>
 
-<!-- ==================== SUPPLY MODAL ==================== -->
+<!-- SUPPLY MODAL -->
 <div class="modal fade" id="supplyModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-primary text-white">
-      <h5 class="modal-title">บันทึกรายการวัสดุ</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-primary text-white"><h5 class="modal-title">บันทึกรายการวัสดุ</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <form id="supplyForm">
         <input type="hidden" id="s_id">
@@ -658,10 +532,7 @@
           <option value="รายรับอื่นๆ">
           <option value="รายจ่ายอื่นๆ">
         </datalist>
-        <div class="row mb-2">
-          <div class="col"><label>ประเภท</label><select id="s_type" class="form-select"><option>รับเข้า</option><option>จ่ายออก</option></select></div>
-          <div class="col"><label>จำนวน</label><input type="number" id="s_qty" class="form-control" required></div>
-        </div>
+        <div class="row mb-2"><div class="col"><label>ประเภท</label><select id="s_type" class="form-select"><option>รับเข้า</option><option>จ่ายออก</option></select></div><div class="col"><label>จำนวน</label><input type="number" id="s_qty" class="form-control" required></div></div>
         <div class="mb-2"><label>ราคา/หน่วย (จ่ายออก = 0)</label><input type="number" id="s_price" class="form-control" step="0.01"></div>
         <div class="mb-2"><label>โครงการ</label><input type="text" id="s_loc" class="form-control" list="projList" required></div>
         <div class="mb-3"><label>วันที่</label><input type="date" id="s_date" class="form-control" required></div>
@@ -672,21 +543,15 @@
   </div></div>
 </div>
 
-<!-- ==================== CONTRACT MODAL ==================== -->
+<!-- CONTRACT MODAL -->
 <div class="modal fade" id="contractModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-dark text-white">
-      <h5 class="modal-title">สัญญา</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-dark text-white"><h5 class="modal-title">สัญญา</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <form id="contractForm">
         <input type="hidden" id="c_id">
         <div class="mb-2"><label>โครงการ</label><input type="text" id="c_name" class="form-control" required></div>
-        <div class="row mb-2">
-          <div class="col"><label>เริ่ม</label><input type="date" id="c_start" class="form-control" required></div>
-          <div class="col"><label>สิ้นสุด</label><input type="date" id="c_end" class="form-control" required></div>
-        </div>
+        <div class="row mb-2"><div class="col"><label>เริ่ม</label><input type="date" id="c_start" class="form-control" required></div><div class="col"><label>สิ้นสุด</label><input type="date" id="c_end" class="form-control" required></div></div>
         <div class="mb-2"><label>งบรวม</label><input type="number" id="c_total" class="form-control" required></div>
         <div class="mb-3"><label>งบค่าแรง</label><input type="number" id="c_labor" class="form-control" required></div>
         <button type="submit" class="btn btn-dark w-100">บันทึก</button>
@@ -695,29 +560,17 @@
   </div></div>
 </div>
 
-<!-- ==================== CAPITAL INJECTION MODAL ==================== -->
+<!-- CAPITAL MODAL -->
 <div class="modal fade" id="capitalModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header text-white" style="background: linear-gradient(135deg,#6a1b9a,#8e44ad);">
-      <h5 class="modal-title"><i class="fas fa-piggy-bank"></i> บันทึกการเพิ่มทุน</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header text-white" style="background: linear-gradient(135deg,#6a1b9a,#8e44ad);"><h5 class="modal-title"><i class="fas fa-piggy-bank"></i> บันทึกการเพิ่มทุน</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
-      <div class="alert alert-info py-2 mb-3">
-        <small><i class="fas fa-info-circle"></i> ใช้บันทึกเงินทุนที่เพิ่มเข้ามาระหว่างดำเนินการตามสัญญา เช่น เงินกู้ยืม เงินลงทุนเพิ่ม หรือทุนส่วนตัวที่นำเข้าธุรกิจ</small>
-      </div>
+      <div class="alert alert-info py-2 mb-3"><small><i class="fas fa-info-circle"></i> ใช้บันทึกเงินทุนที่เพิ่มเข้ามาระหว่างดำเนินการตามสัญญา เช่น เงินกู้ยืม เงินลงทุนเพิ่ม หรือทุนส่วนตัวที่นำเข้าธุรกิจ</small></div>
       <form id="capitalForm">
         <input type="hidden" id="cap_id">
-        <div class="mb-2">
-          <label class="fw-bold">วันที่รับเงินทุน <span class="text-danger">*</span></label>
-          <input type="date" id="cap_date" class="form-control" required>
-        </div>
-        <div class="mb-2">
-          <label class="fw-bold">จำนวนเงิน (บาท) <span class="text-danger">*</span></label>
-          <input type="number" id="cap_amount" class="form-control" placeholder="0.00" step="0.01" required>
-        </div>
-        <div class="mb-2">
-          <label class="fw-bold">แหล่งที่มาของเงินทุน <span class="text-danger">*</span></label>
+        <div class="mb-2"><label class="fw-bold">วันที่รับเงินทุน <span class="text-danger">*</span></label><input type="date" id="cap_date" class="form-control" required></div>
+        <div class="mb-2"><label class="fw-bold">จำนวนเงิน (บาท) <span class="text-danger">*</span></label><input type="number" id="cap_amount" class="form-control" placeholder="0.00" step="0.01" required></div>
+        <div class="mb-2"><label class="fw-bold">แหล่งที่มาของเงินทุน <span class="text-danger">*</span></label>
           <select id="cap_source" class="form-select" required>
             <option value="">-- เลือกประเภท --</option>
             <option value="เจ้าของกิจการ">เจ้าของกิจการ (Owner Capital)</option>
@@ -727,29 +580,18 @@
             <option value="อื่นๆ">อื่นๆ</option>
           </select>
         </div>
-        <div class="mb-2">
-          <label class="fw-bold">โครงการที่เกี่ยวข้อง</label>
-          <input type="text" id="cap_project" class="form-control" list="projList" placeholder="เลือกหรือพิมพ์ชื่อโครงการ">
-        </div>
-        <div class="mb-3">
-          <label class="fw-bold">หมายเหตุ / รายละเอียดเพิ่มเติม</label>
-          <textarea id="cap_note" class="form-control" rows="2" placeholder="เช่น กู้เพิ่มเพื่อซื้อวัสดุโครงการ A งวด 3"></textarea>
-        </div>
-        <button type="submit" class="btn w-100 text-white fw-bold" style="background: linear-gradient(135deg,#6a1b9a,#8e44ad);">
-          <i class="fas fa-save"></i> บันทึกการเพิ่มทุน
-        </button>
+        <div class="mb-2"><label class="fw-bold">โครงการที่เกี่ยวข้อง</label><input type="text" id="cap_project" class="form-control" list="projList" placeholder="เลือกหรือพิมพ์ชื่อโครงการ"></div>
+        <div class="mb-3"><label class="fw-bold">หมายเหตุ / รายละเอียดเพิ่มเติม</label><textarea id="cap_note" class="form-control" rows="2" placeholder="เช่น กู้เพิ่มเพื่อซื้อวัสดุโครงการ A งวด 3"></textarea></div>
+        <button type="submit" class="btn w-100 text-white fw-bold" style="background: linear-gradient(135deg,#6a1b9a,#8e44ad);"><i class="fas fa-save"></i> บันทึกการเพิ่มทุน</button>
       </form>
     </div>
   </div></div>
 </div>
 
-<!-- ==================== USER MODAL ==================== -->
+<!-- USER MODAL -->
 <div class="modal fade" id="userModal">
   <div class="modal-dialog"><div class="modal-content">
-    <div class="modal-header bg-dark text-white">
-      <h5 class="modal-title">ผู้ใช้</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-    </div>
+    <div class="modal-header bg-dark text-white"><h5 class="modal-title">ผู้ใช้</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <form id="userForm">
         <input type="hidden" id="u_row">
@@ -763,7 +605,6 @@
   </div></div>
 </div>
 
-<!-- JS Dependencies -->
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
@@ -771,62 +612,67 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- ==================== SCRIPT ==================== -->
 <script>
-  // ⚠️ [สำคัญมาก!] เปลี่ยน URL ตรงนี้เป็น Web App URL ที่ได้จากการ Deploy ใน Google Apps Script แบบ "Anyone"
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbwr0hy85tfU-r0x5lR7xBThzP8-rlQhheNXZ17nqMW4VaegvOfVee2mJqvwJnXik4id/exec";
-
-  // 🟢 ฟังก์ชันส่งข้อมูลด้วยวิธี URL-encoded เพื่อเลี่ยง OPTIONS Preflight (หมดปัญหากวนใจเรื่อง CORS 100%)
-  async function runGoogle(funcName, params = {}) {
-    try {
-      const payload = { action: funcName, ...params };
-      
-      // แปลงข้อมูลแบบ Object เป็น URL-encoded string ตัวต่อตัว
-      const formBody = Object.keys(payload).map(key => {
-        let value = payload[key];
-        if (typeof value === 'object' && value !== null) {
-          value = JSON.stringify(value); // แพ็คตัวแปรย่อยส่งไปต่อ
-        }
-        return encodeURIComponent(key) + '=' + encodeURIComponent(value);
-      }).join('&');
-
-      const response = await fetch(GAS_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' // ตั้งเป็น Simple Request ข้ามด่าน CORS
-        },
-        body: formBody
-      });
-      
-      const result = await response.json();
-      
-      if (result.success !== undefined) {
-        if (result.success) {
-          return result.data !== undefined ? result.data : result;
-        } else {
-          throw new Error(result.message || "เกิดข้อผิดพลาดในการประมวลผลระบบหลังบ้าน");
-        }
-      }
-      return result;
-    } catch (err) {
-      console.error("Fetch Error: ", err);
-      throw err;
-    }
-  }
-
   let contractTable, supplyTable, inventoryTable, userTable, requestTable, workerTable, payrollTable, dashboardChart;
   let currentUser = null, currentRole = null, base64Image = null, imgName = null;
   let globalWorkers = [];
   const formatMoney = n => parseFloat(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  // ==================== LOGIN ====================
+  // ==========================================
+  // 🔌 API BRIDGE - แทน google.script.run
+  // ==========================================
+  async function runGoogle(funcName, ...args) {
+    // สร้าง params object จาก arguments
+    let params = {};
+    
+    // map arguments ตาม function name
+    if (funcName === 'loginSystem')           params = { username: args[0], password: args[1] };
+    else if (funcName === 'deleteUser')       params = { row: args[0] };
+    else if (funcName === 'saveUser')         params = args[0] || {};
+    else if (funcName === 'deleteSupply')     params = { id: args[0] };
+    else if (funcName === 'saveSupply')       params = args[0] || {};
+    else if (funcName === 'deleteContract')   params = { id: args[0] };
+    else if (funcName === 'saveContract')     params = args[0] || {};
+    else if (funcName === 'deleteLabor')      params = { id: args[0] };
+    else if (funcName === 'saveLabor')        params = args[0] || {};
+    else if (funcName === 'deleteRequest')    params = { id: args[0] };
+    else if (funcName === 'saveRequest')      params = args[0] || {};
+    else if (funcName === 'updateRequestStatus') params = { id: args[0], status: args[1], approver: args[2] };
+    else if (funcName === 'deleteWorker')     params = { id: args[0] };
+    else if (funcName === 'saveWorker')       params = args[0] || {};
+    else if (funcName === 'deletePayroll')    params = { id: args[0] };
+    else if (funcName === 'savePayroll')      params = args[0] || {};
+    else if (funcName === 'getPayslipData')   params = { payrollId: args[0] };
+    else if (funcName === 'deleteCapital')    params = { id: args[0] };
+    else if (funcName === 'saveCapital')      params = args[0] || {};
+    else if (funcName === 'getExpenseReport') params = { monthStr: args[0] };
+    else if (funcName === 'getProjectExpenseReport') params = { monthStr: args[0] };
+    else if (funcName === 'evaluateMaterial') params = { itemName: args[0], workDays: args[1] };
+
+    try {
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' }, // ใช้ text/plain เพื่อหลีกเลี่ยง preflight CORS
+        body: JSON.stringify({ action: funcName, params })
+      });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      console.error('Fetch Error: ', err);
+      throw err;
+    }
+  }
+
+  // ==========================================
+  // 🔐 LOGIN
+  // ==========================================
   $('#loginForm').submit(async e => {
     e.preventDefault();
     $('#loader').css('display', 'flex');
     try {
-      // เรียกใช้ API action 'login'
-      const res = await runGoogle('login', { username: $('#loginUser').val(), password: $('#loginPass').val() });
-      if (res.success) {
+      const res = await runGoogle('loginSystem', $('#loginUser').val(), $('#loginPass').val());
+      if (res && res.success) {
         currentUser = res.name;
         currentRole = res.role;
         $('#userDisplay').html(`<i class="fas fa-user-circle"></i> ${currentUser} <span class="badge bg-light text-dark ms-1">${currentRole}</span>`);
@@ -835,10 +681,10 @@
         setupMenu(currentRole);
         await startApp();
       } else {
-        Swal.fire('Error', res.message || 'Login Failed', 'error');
+        Swal.fire('Error', (res && res.message) || 'Login Failed', 'error');
       }
     } catch (err) {
-      Swal.fire('Error', 'ไม่สามารถเชื่อมต่อระบบหลังบ้านได้ (กรุณาเช็คการ Deploy สิทธิ์หลังบ้านและ GAS_URL)', 'error');
+      Swal.fire('Error', 'เชื่อมต่อ GAS ไม่ได้ กรุณาตรวจสอบ GAS_URL หรือการ Deploy', 'error');
     }
     $('#loader').fadeOut();
   });
@@ -850,7 +696,9 @@
     $('#loginForm')[0].reset();
   };
 
-  // ==================== MENU SETUP ====================
+  // ==========================================
+  // 📋 MENU SETUP
+  // ==========================================
   function setupMenu(role) {
     let tabs = '';
     if (role === 'Admin') {
@@ -878,7 +726,9 @@
     if (role === 'หัวหน้างาน') $('#btnCreateReq').show(); else $('#btnCreateReq').hide();
   }
 
-  // ==================== START APP ====================
+  // ==========================================
+  // 🚀 START APP
+  // ==========================================
   async function startApp() {
     initTables();
     const curMonth = new Date().toISOString().slice(0, 7);
@@ -893,13 +743,8 @@
         let matchM = true, matchT = true;
         if (mVal && data[1]) {
           const dateStr = data[1].toString();
-          if (dateStr.includes('/')) {
-            const [d, m, y] = dateStr.split('/');
-            if (`${y}-${m}` !== mVal) matchM = false;
-          } else if (dateStr.includes('-')) {
-            const [y, m, d] = dateStr.split('-');
-            if (`${y}-${m}` !== mVal) matchM = false;
-          }
+          if (dateStr.includes('/')) { const [d, m, y] = dateStr.split('/'); if (`${y}-${m}` !== mVal) matchM = false; }
+          else if (dateStr.includes('-')) { const [y, m] = dateStr.split('-'); if (`${y}-${m}` !== mVal) matchM = false; }
         }
         if (tVal && !data[3].includes(tVal)) matchT = false;
         return matchM && matchT;
@@ -929,7 +774,9 @@
     }
   }
 
-  // ==================== INIT DATATABLES ====================
+  // ==========================================
+  // 📊 INIT DATATABLES
+  // ==========================================
   function initTables() {
     const com = { destroy: true, autoWidth: false, language: { emptyTable: "ไม่พบข้อมูล" } };
 
@@ -948,13 +795,7 @@
     supplyTable = $('#supplyTable').DataTable({
       ...com,
       columns: [
-        { data: 'imageUrl', title: 'รูป', render: d => {
-            const url = (d || '').trim();
-            return (url.startsWith('https://') && url.length > 20)
-              ? `<img src="${url}" class="table-img" onclick="viewImg('${url}')">`
-              : '-';
-          }
-        },
+        { data: 'imageUrl', title: 'รูป', render: d => { const url = (d || '').trim(); return (url.startsWith('https://') && url.length > 20) ? `<img src="${url}" class="table-img" onclick="viewImg('${url}')">` : '-'; } },
         { data: 'requestDate', title: 'วันที่' },
         { data: 'itemName', title: 'รายการ' },
         { data: 'actionType', title: 'ประเภท', render: d => `<span class="badge ${d === 'รับเข้า' ? 'bg-primary' : 'bg-warning text-dark'}">${d}</span>` },
@@ -990,16 +831,15 @@
             if (d === 'ไม่อนุมัติ') return `<span class="badge bg-danger">${d}</span>`;
             return `<span class="badge bg-success">${d}</span>`;
         }},
-        {
-          title: 'จัดการ', data: null, render: (d, t, r) => {
+        { title: 'จัดการ', data: null, render: (d, t, r) => {
             let html = '';
             if (r.status === 'รออนุมัติ') {
               if (currentRole === 'Admin') {
                 html += `<button class="btn btn-sm btn-success me-1" onclick='approveRequest(${JSON.stringify(r).replace(/'/g, "&apos;")})'>อนุมัติ</button>`;
                 html += `<button class="btn btn-sm btn-danger" onclick='rejectRequest("${r.id}")'>ไม่อนุมัติ</button>`;
               } else if (currentRole === 'หัวหน้างาน' || currentRole === 'ผู้ควบคุมงาน') {
-                html += `<i class="fas fa-edit text-warning action-btn me-2" style="cursor:pointer;" onclick='editRequest(${JSON.stringify(r).replace(/'/g, "&apos;")})' title="แก้ไข"></i>`;
-                html += `<i class="fas fa-trash text-danger action-btn" style="cursor:pointer;" onclick="delRequest('${r.id}')" title="ลบ"></i>`;
+                html += `<i class="fas fa-edit text-warning action-btn me-2" onclick='editRequest(${JSON.stringify(r).replace(/'/g, "&apos;")})' title="แก้ไข"></i>`;
+                html += `<i class="fas fa-trash text-danger action-btn" onclick="delRequest('${r.id}')" title="ลบ"></i>`;
               }
             }
             return html;
@@ -1026,7 +866,7 @@
         { data: 'phone', title: 'เบอร์' },
         { data: 'baseWage', title: 'ฐานเงิน/ค่าแรง', render: formatMoney },
         { data: 'status', title: 'สถานะ', render: d => `<span class="badge ${d === 'ทำงานอยู่' ? 'bg-success' : 'bg-secondary'}">${d}</span>` },
-        { data: null, title: 'จัดการ', render: r => `<i class="fas fa-edit text-warning action-btn me-2" onclick='editWorker(${JSON.stringify(r).replace(/'/g,"&apos;")})'></i><i class="fas fa-trash text-danger action-btn" onclick="delWorker('${r.id}')"></i>` }
+        { data: null, title: 'จัดการ', render: r => `<i class="fas fa-edit text-warning action-btn me-2" onclick='editWorker(${JSON.stringify(r).replace(/'/g, "&apos;")})'></i><i class="fas fa-trash text-danger action-btn" onclick="delWorker('${r.id}')"></i>` }
       ]
     });
 
@@ -1043,7 +883,9 @@
     });
   }
 
-  // ==================== CALCULATION ====================
+  // ==========================================
+  // ➕ SUMMARIES
+  // ==========================================
   function calcSupplySum() {
     let tIn = 0, tOut = 0;
     supplyTable.rows({ filter: 'applied' }).data().each(r => {
@@ -1087,48 +929,50 @@
     $('#payrollSumYear').text(formatMoney(sumYear));
   }
 
-  // ==================== LOAD DATA ====================
+  // ==========================================
+  // 📥 LOAD DATA
+  // ==========================================
   async function loadData() {
     $('#loader').show();
     try {
       const p = [];
       if (currentRole !== 'หัวหน้างาน') {
-        p.push(runGoogle('getSupplies').then(d => {
+        p.push(runGoogle('getSuppliesData').then(d => {
           d = d || [];
           supplyTable.clear().rows.add(d).draw();
           $('#projList').html(d.map(x => `<option value="${x.deliveryLocation}">`).join(''));
           calcSupplySum();
         }));
-        p.push(runGoogle('getWorkers').then(d => {
+        p.push(runGoogle('getWorkersData').then(d => {
           d = d || [];
           globalWorkers = d;
           workerTable.clear().rows.add(d).draw();
         }));
       }
-      p.push(runGoogle('getRequests').then(d => {
+      p.push(runGoogle('getRequestsData').then(d => {
         d = d || [];
         requestTable.clear().rows.add(d).draw();
         const st = $('#reqStatusFilter').val();
         if (st) requestTable.column(5).search(st).draw();
       }));
-      p.push(runGoogle('getInventory').then(d => {
+      p.push(runGoogle('getInventoryStatus').then(d => {
         d = d || [];
         inventoryTable.clear().rows.add(d).draw();
       }));
-      p.push(runGoogle('getMaterials').then(l => {
+      p.push(runGoogle('getMaterialList').then(l => {
         l = l || [];
         $('#materialOptions').html(l.map(x => `<option value="${x}">`).join(''));
       }));
       if (currentRole === 'Admin') {
-        p.push(runGoogle('getContracts').then(d => {
+        p.push(runGoogle('getContractsData').then(d => {
           d = d || [];
           contractTable.clear().rows.add(d).draw();
         }));
-        p.push(runGoogle('getUsers').then(d => {
+        p.push(runGoogle('getUsersList').then(d => {
           d = d || [];
           userTable.clear().rows.add(d).draw();
         }));
-        p.push(runGoogle('getPayroll').then(d => {
+        p.push(runGoogle('getPayrollData').then(d => {
           d = d || [];
           payrollTable.clear().rows.add(d).draw();
           calcPayrollSum();
@@ -1142,7 +986,9 @@
     }
   }
 
-  // ==================== WORKERS ====================
+  // ==========================================
+  // 👷 WORKERS
+  // ==========================================
   window.openWorkerModal = () => {
     $('#workerForm')[0].reset(); $('#w_id').val('');
     $('#w_start').val(new Date().toISOString().split('T')[0]);
@@ -1158,19 +1004,16 @@
   };
   $('#workerForm').submit(async e => {
     e.preventDefault(); $('#workerModal').modal('hide'); $('#loader').show();
-    await runGoogle('saveWorker', {
-      id: $('#w_id').val(), name: $('#w_name').val(), idCard: $('#w_idcard').val(),
-      dob: $('#w_dob').val(), phone: $('#w_phone').val(), startDate: $('#w_start').val(),
-      endDate: $('#w_end').val(), baseWage: $('#w_base').val(), role: $('#w_role').val(),
-      bankAcc: $('#w_bankacc').val(), bankName: $('#w_bankacc').val(), status: $('#w_status').val()
-    });
+    await runGoogle('saveWorker', { id: $('#w_id').val(), name: $('#w_name').val(), idCard: $('#w_idcard').val(), dob: $('#w_dob').val(), phone: $('#w_phone').val(), startDate: $('#w_start').val(), endDate: $('#w_end').val(), baseWage: $('#w_base').val(), role: $('#w_role').val(), bankAcc: $('#w_bankacc').val(), bankName: $('#w_bankname').val(), status: $('#w_status').val() });
     loadData(); Swal.fire('สำเร็จ', 'บันทึกคนงานแล้ว', 'success');
   });
   window.delWorker = id => Swal.fire({ title: 'ลบ?', icon: 'warning', showCancelButton: true }).then(async r => {
-    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteWorker', { id: id }); loadData(); }
+    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteWorker', id); loadData(); }
   });
 
-  // ==================== PAYROLL ====================
+  // ==========================================
+  // 💰 PAYROLL
+  // ==========================================
   window.openPayrollModal = () => {
     $('#payrollForm')[0].reset(); $('#p_id').val('');
     $('#p_date').val(new Date().toISOString().split('T')[0]);
@@ -1210,29 +1053,20 @@
   $(document).on('input', '.pr-calc-manual', recalcNet);
   $('#payrollForm').submit(async e => {
     e.preventDefault(); $('#payrollModal').modal('hide'); $('#loader').show();
-    await runGoogle('savePayroll', {
-      id: $('#p_id').val(), date: $('#p_date').val(), workerName: $('#p_worker').val(),
-      posAllowance: $('#p_pos').val(), otherIncome: $('#p_other_inc').val(),
-      grossIncome: $('#p_gross').val(), taxDeduct: $('#p_tax').val(),
-      ssoDeduct: $('#p_sso').val(), otherDeduct: $('#p_other_ded').val(),
-      netPay: $('#p_net').val(), note: $('#p_note').val()
-    });
+    await runGoogle('savePayroll', { id: $('#p_id').val(), date: $('#p_date').val(), workerName: $('#p_worker').val(), posAllowance: $('#p_pos').val(), otherIncome: $('#p_other_inc').val(), grossIncome: $('#p_gross').val(), taxDeduct: $('#p_tax').val(), ssoDeduct: $('#p_sso').val(), otherDeduct: $('#p_other_ded').val(), netPay: $('#p_net').val(), note: $('#p_note').val() });
     loadData(); Swal.fire('สำเร็จ', 'บันทึกสลิปแล้ว', 'success');
   });
   window.delPayroll = id => Swal.fire({ title: 'ลบ?', icon: 'warning', showCancelButton: true }).then(async r => {
-    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deletePayroll', { id: id }); loadData(); }
+    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deletePayroll', id); loadData(); }
   });
-
-  // ==================== PRINT PAYSLIP ====================
   window.printPayslip = async (id) => {
     $('#loader').show();
     try {
-      const res = await runGoogle('getPayslip', { id: id });
+      const res = await runGoogle('getPayslipData', id);
       if (res && res.payroll) {
         const pr = res.payroll, w = res.worker;
         $('#slip_name').text(pr.workerName); $('#slip_role').text(w.role || '-');
-        $('#slip_date').text(pr.rawDate);
-        $('#slip_bank').text(`${w.bankName || '-'} / ${w.bankAcc || '-'}`);
+        $('#slip_date').text(pr.rawDate); $('#slip_bank').text(`${w.bankName || '-'} / ${w.bankAcc || '-'}`);
         $('#slip_base').text(formatMoney(w.baseWage)); $('#slip_pos').text(formatMoney(pr.posAllowance));
         $('#slip_other_inc').text(formatMoney(pr.otherIncome)); $('#slip_gross').text(formatMoney(pr.grossIncome));
         $('#slip_tax').text(formatMoney(pr.taxDeduct)); $('#slip_sso').text(formatMoney(pr.ssoDeduct));
@@ -1240,15 +1074,14 @@
         $('#slip_total_ded').text(formatMoney(parseFloat(pr.taxDeduct) + parseFloat(pr.ssoDeduct) + parseFloat(pr.otherDeduct)));
         $('#slip_net').text(formatMoney(pr.netPay));
         $('#slip_note').text(pr.note || '-');
-
         $('#loader').fadeOut(); new bootstrap.Modal($('#payslipModal')).show();
       }
-    } catch (e) {
-      $('#loader').fadeOut(); Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลสลิปได้', 'error');
-    }
+    } catch (e) { $('#loader').fadeOut(); Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลสลิปได้', 'error'); }
   };
 
-  // ==================== MATERIAL EVALUATION ====================
+  // ==========================================
+  // 🔍 EVALUATE
+  // ==========================================
   window.openEvaluateModal = () => {
     $('#ev_item').val(''); $('#ev_days').val(1); $('#ev_result').hide();
     new bootstrap.Modal($('#evaluateModal')).show();
@@ -1258,27 +1091,19 @@
     if (!item || !days) return Swal.fire('เตือน', 'กรุณาใส่ข้อมูลให้ครบ', 'warning');
     $('#loader').show();
     try {
-      const res = await runGoogle('evaluateMaterial', { itemName: item, days: days });
+      const res = await runGoogle('evaluateMaterial', item, parseInt(days));
       $('#loader').fadeOut();
       if (res.success) {
-        $('#ev_result').html(`
-          <strong>ผลประเมิน ${item}:</strong><br>
-          - จ่ายครั้งล่าสุด: ${res.lastDate} (จำนวน ${res.lastQty} ชิ้น)<br>
-          - ผ่านมาแล้ว: ${res.daysSinceLast} วัน<br>
-          - อัตราการใช้เฉลี่ย: <span class="text-danger fw-bold">${res.burnRateDaily} ชิ้น/วัน</span><br>
-          <hr>
-          <strong>ประเมินการทำงาน ${days} วันข้างหน้า:</strong><br>
-          - ต้องใช้วัสดุ: ${res.estimatedQty} ชิ้น<br>
-          - คิดเป็นเงิน: ${formatMoney(res.estimatedCost)} บาท<br>
-          - หากใช้ระดับนี้ทั้งเดือน (30 วัน) จะมีต้นทุน: ${formatMoney(res.monthlyCost)} บาท
-        `).slideDown();
+        $('#ev_result').html(`<strong>ผลประเมิน ${item}:</strong><br>- จ่ายครั้งล่าสุด: ${res.lastDate} (จำนวน ${res.lastQty} ชิ้น)<br>- ผ่านมาแล้ว: ${res.daysSinceLast} วัน<br>- อัตราการใช้เฉลี่ย: <span class="text-danger fw-bold">${res.burnRateDaily} ชิ้น/วัน</span><br><hr><strong>ประเมินการทำงาน ${days} วันข้างหน้า:</strong><br>- ต้องใช้วัสดุ: ${res.estimatedQty} ชิ้น<br>- คิดเป็นเงิน: ${formatMoney(res.estimatedCost)} บาท<br>- หากใช้ระดับนี้ทั้งเดือน (30 วัน) จะมีต้นทุน: ${formatMoney(res.monthlyCost)} บาท`).slideDown();
       } else {
         $('#ev_result').html(`<span class="text-danger">${res.message}</span>`).slideDown();
       }
     } catch (e) { $('#loader').fadeOut(); Swal.fire('Error', 'เกิดข้อผิดพลาดในการคำนวณ', 'error'); }
   };
 
-  // ==================== REQUEST ====================
+  // ==========================================
+  // 📋 REQUESTS
+  // ==========================================
   window.openRequestModal = () => {
     $('#requestForm')[0].reset(); $('#r_id').val('');
     new bootstrap.Modal($('#requestModal')).show();
@@ -1289,14 +1114,11 @@
     new bootstrap.Modal($('#requestModal')).show();
   };
   window.delRequest = id => Swal.fire({ title: 'ลบคำขอนี้?', icon: 'warning', showCancelButton: true }).then(async res => {
-    if (res.isConfirmed) { $('#loader').show(); await runGoogle('deleteRequest', { id: id }); loadData(); }
+    if (res.isConfirmed) { $('#loader').show(); await runGoogle('deleteRequest', id); loadData(); }
   });
   $('#requestForm').submit(async e => {
     e.preventDefault(); $('#requestModal').modal('hide'); $('#loader').show();
-    await runGoogle('saveRequest', {
-      id: $('#r_id').val(), itemName: $('#r_item').val(),
-      qty: $('#r_qty').val(), location: $('#r_loc').val(), requester: currentUser
-    });
+    await runGoogle('saveRequest', { id: $('#r_id').val(), itemName: $('#r_item').val(), qty: $('#r_qty').val(), location: $('#r_loc').val(), requester: currentUser });
     loadData(); Swal.fire('สำเร็จ', 'บันทึกคำขอแล้ว', 'success');
   });
   window.approveRequest = r => {
@@ -1304,12 +1126,8 @@
       .then(async res => {
         if (res.isConfirmed) {
           $('#loader').show();
-          await runGoogle('saveSupply', {
-            id: '', itemName: r.itemName, actionType: 'จ่ายออก', itemQuantity: r.qty,
-            unitPrice: 0, deliveryLocation: r.location,
-            requestDate: new Date().toISOString().split('T')[0], requester: currentUser
-          });
-          await runGoogle('updateReqStatus', { id: r.id, status: 'อนุมัติ/จ่ายแล้ว', approver: currentUser });
+          await runGoogle('saveSupply', { id: '', itemName: r.itemName, actionType: 'จ่ายออก', itemQuantity: r.qty, unitPrice: 0, deliveryLocation: r.location, requestDate: new Date().toISOString().split('T')[0], requester: currentUser });
+          await runGoogle('updateRequestStatus', r.id, 'อนุมัติ/จ่ายแล้ว', currentUser);
           loadData(); Swal.fire('สำเร็จ', 'จ่ายของและอนุมัติแล้ว', 'success');
         }
       });
@@ -1319,36 +1137,41 @@
       .then(async res => {
         if (res.isConfirmed) {
           $('#loader').show();
-          await runGoogle('updateReqStatus', { id: id, status: 'ไม่อนุมัติ', approver: currentUser });
+          await runGoogle('updateRequestStatus', id, 'ไม่อนุมัติ', currentUser);
           loadData(); Swal.fire('สำเร็จ', 'อัปเดตสถานะเป็น ไม่อนุมัติ เรียบร้อย', 'success');
         }
       });
   };
 
-  // ==================== SUPPLY ====================
+  // ==========================================
+  // 📦 SUPPLY
+  // ==========================================
   window.openSupplyModal = () => {
-    $('#supplyForm')[0].reset(); $('#s_id').val(''); $('#s_date').val(new Date().toISOString().split('T')[0]); base64Image = null; $('#imagePreview').hide(); new bootstrap.Modal($('#supplyModal')).show();
+    $('#supplyForm')[0].reset(); $('#s_id').val('');
+    $('#s_date').val(new Date().toISOString().split('T')[0]);
+    base64Image = null; $('#imagePreview').hide();
+    new bootstrap.Modal($('#supplyModal')).show();
   };
-  $('#s_file').change(function() { const f = this.files[0], r = new FileReader(); r.onload = e => { $('#imagePreview').attr('src', e.target.result).show(); base64Image = e.target.result; imgName = f.name; }; r.readAsDataURL(f); });
+  $('#s_file').change(function() {
+    const f = this.files[0], r = new FileReader();
+    r.onload = e => { $('#imagePreview').attr('src', e.target.result).show(); base64Image = e.target.result; imgName = f.name; };
+    r.readAsDataURL(f);
+  });
   $('#supplyForm').submit(async e => {
     e.preventDefault(); $('#loader').show(); $('#supplyModal').modal('hide');
-    await runGoogle('saveSupply', {
-      id: $('#s_id').val(), itemName: $('#s_name').val(), actionType: $('#s_type').val(),
-      itemQuantity: $('#s_qty').val(), unitPrice: $('#s_price').val(),
-      deliveryLocation: $('#s_loc').val(), requestDate: $('#s_date').val(),
-      requester: currentUser, imageBase64: base64Image, imageName: imgName,
-      imageUrl: $('#imagePreview').attr('src')
-    });
+    await runGoogle('saveSupply', { id: $('#s_id').val(), itemName: $('#s_name').val(), actionType: $('#s_type').val(), itemQuantity: $('#s_qty').val(), unitPrice: $('#s_price').val(), deliveryLocation: $('#s_loc').val(), requestDate: $('#s_date').val(), requester: currentUser, imageBase64: base64Image, imageName: imgName, imageUrl: $('#imagePreview').attr('src') });
     loadData(); Swal.fire('สำเร็จ', 'บันทึกแล้ว', 'success');
   });
   window.delSupply = id => Swal.fire({ title: 'ลบ?', icon: 'warning', showCancelButton: true }).then(async r => {
-    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteSupply', { id: id }); loadData(); }
+    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteSupply', id); loadData(); }
   });
   window.viewImg = url => {
-    Swal.fire({ imageUrl: url, imageAlt: 'Attached File', showConfirmButton: true, confirmButtonText: 'ปิด', customClass: { image: 'img-fluid rounded shadow' } });
+    Swal.fire({ imageUrl: url, imageAlt: 'Attached File', showConfirmButton: true, confirmButtonText: 'ปิด' });
   };
 
-  // ==================== CONTRACTS ====================
+  // ==========================================
+  // 📁 CONTRACTS
+  // ==========================================
   window.openContractModal = () => {
     $('#contractForm')[0].reset(); $('#c_id').val('');
     new bootstrap.Modal($('#contractModal')).show();
@@ -1361,91 +1184,110 @@
   };
   $('#contractForm').submit(async e => {
     e.preventDefault(); $('#contractModal').modal('hide'); $('#loader').show();
-    await runGoogle('saveContract', {
-      id: $('#c_id').val(), name: $('#c_name').val(),
-      startDate: $('#c_start').val(), endDate: $('#c_end').val(),
-      totalBudget: $('#c_total').val(), laborBudget: $('#c_labor').val()
-    });
+    await runGoogle('saveContract', { id: $('#c_id').val(), name: $('#c_name').val(), startDate: $('#c_start').val(), endDate: $('#c_end').val(), totalBudget: $('#c_total').val(), laborBudget: $('#c_labor').val() });
     loadData(); Swal.fire('สำเร็จ', 'บันทึกข้อมูลสัญญาแล้ว', 'success');
   });
   window.delContract = id => Swal.fire({ title: 'ลบสัญญานี้?', icon: 'warning', showCancelButton: true }).then(async r => {
-    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteContract', { id: id }); loadData(); }
+    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteContract', id); loadData(); }
   });
 
-  // ==================== CAPITAL INJECTION ====================
+  // ==========================================
+  // 💜 CAPITAL
+  // ==========================================
   window.openCapitalModal = () => {
     $('#capitalForm')[0].reset();
     $('#cap_id').val('');
     $('#cap_date').val(new Date().toISOString().split('T')[0]);
     new bootstrap.Modal($('#capitalModal')).show();
   };
-
   $('#capitalForm').submit(async e => {
     e.preventDefault();
     const amt = parseFloat($('#cap_amount').val() || 0);
     if (amt <= 0) return Swal.fire('เตือน', 'กรุณาระบุจำนวนเงินที่มากกว่า 0', 'warning');
-    $('#capitalModal').modal('hide');
-    $('#loader').show();
-    await runGoogle('saveCapital', {
-      id: $('#cap_id').val(),
-      date: $('#cap_date').val(),
-      amount: amt,
-      source: $('#cap_source').val(),
-      project: $('#cap_project').val(),
-      note: $('#cap_note').val(),
-      recorder: currentUser
-    });
+    $('#capitalModal').modal('hide'); $('#loader').show();
+    await runGoogle('saveCapital', { id: $('#cap_id').val(), date: $('#cap_date').val(), amount: amt, source: $('#cap_source').val(), project: $('#cap_project').val(), note: $('#cap_note').val(), recorder: currentUser });
     loadData();
     if (currentRole === 'Admin') loadDashboard();
     Swal.fire('สำเร็จ', 'บันทึกการเพิ่มทุนเรียบร้อยแล้ว', 'success');
   });
-
   window.delCapital = async (id) => {
     const res = await Swal.fire({ title: 'ลบรายการเพิ่มทุนนี้?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545' });
     if (res.isConfirmed) {
       $('#loader').show();
-      await runGoogle('deleteCapital', { id: id });
+      await runGoogle('deleteCapital', id);
       loadData();
       if (currentRole === 'Admin') loadDashboard();
     }
   };
 
-  // ==================== USERS ====================
+  // ==========================================
+  // 👥 USERS
+  // ==========================================
   window.openUserModal = () => {
     $('#userForm')[0].reset(); $('#u_row').val('');
     new bootstrap.Modal($('#userModal')).show();
   };
   $('#userForm').submit(async e => {
     e.preventDefault(); $('#userModal').modal('hide'); $('#loader').show();
-    await runGoogle('saveUser', {
-      row: $('#u_row').val(), user: $('#u_user').val(), pass: $('#u_pass').val(),
-      name: $('#u_name').val(), role: $('#u_role').val()
-    });
+    await runGoogle('saveUser', { row: $('#u_row').val(), user: $('#u_user').val(), pass: $('#u_pass').val(), name: $('#u_name').val(), role: $('#u_role').val() });
     loadData(); Swal.fire('สำเร็จ', 'บันทึกผู้ใช้งานแล้ว', 'success');
   });
   window.delUser = row => Swal.fire({ title: 'ลบผู้ใช้งาน?', icon: 'warning', showCancelButton: true }).then(async r => {
-    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteUser', { row: row }); loadData(); }
+    if (r.isConfirmed) { $('#loader').show(); await runGoogle('deleteUser', row); loadData(); }
   });
 
-  // ==================== DASHBOARD ====================
+  // ==========================================
+  // 📈 DASHBOARD
+  // ==========================================
   async function loadDashboard() {
     try {
       const [res, capitalData] = await Promise.all([
-        runGoogle('getDashboard'),
-        runGoogle('getCapital')
+        runGoogle('getDashboardStats'),
+        runGoogle('getCapitalData')
       ]);
-
       if (!res) return;
 
-      const realRevenue = res.realRevenue || 0;
-      const materialExpense = res.materialCost || 0;
-      const otherExpense = res.otherCost || 0;
-      const totalPayroll = res.laborCost || 0;
-      const totalExpense = res.totalExpense || 0;
-      const realProfit = res.realProfit || 0;
-      const totalCapital = res.totalCapital || 0;
+      let realRevenue = 0, materialExpense = 0, otherExpense = 0;
+      const REVENUE_KEYWORDS = ['ค่างวด', 'รายรับ'];
+      const EXPENSE_KEYWORDS = ['ภาษี', 'ประกันสังคม', 'เดินทาง', 'สอบบัญชี', 'กองทุน'];
+      const projRevenue = {}, projExpense = {};
+      const revenueRows = [];
 
-      $('#dashContractRevenue').text(formatMoney(res.contractRevenue || 0));
+      supplyTable && supplyTable.rows().data().each(r => {
+        const itemName = (r.itemName || '').toString();
+        const qty = parseFloat(r.itemQuantity || 0);
+        const price = parseFloat(r.unitPrice || 0);
+        const amt = qty * price;
+        const proj = r.deliveryLocation || 'ไม่ระบุ';
+        if (r.actionType === 'รับเข้า') {
+          if (REVENUE_KEYWORDS.some(k => itemName.includes(k))) {
+            realRevenue += amt;
+            projRevenue[proj] = (projRevenue[proj] || 0) + amt;
+            revenueRows.push({ date: r.requestDate, item: itemName, proj, amt });
+          }
+        } else if (r.actionType === 'จ่ายออก') {
+          if (EXPENSE_KEYWORDS.some(k => itemName.includes(k))) {
+            otherExpense += amt;
+            projExpense[proj] = (projExpense[proj] || 0) + amt;
+          } else if (!itemName.includes('เพิ่มทุน')) {
+            materialExpense += amt;
+            projExpense[proj] = (projExpense[proj] || 0) + amt;
+          }
+        }
+      });
+
+      let totalPayroll = 0;
+      payrollTable && payrollTable.rows().data().each(r => { totalPayroll += parseFloat(r.netPay || 0); });
+
+      const capitals = capitalData || [];
+      let totalCapital = 0;
+      capitals.forEach(c => { totalCapital += parseFloat(c.amount || 0); });
+
+      const contractRevenue = parseFloat(res.revenue || 0);
+      const totalExpense = totalPayroll + materialExpense + otherExpense;
+      const realProfit = realRevenue - totalExpense;
+
+      $('#dashContractRevenue').text(formatMoney(contractRevenue));
       $('#dashRealRevenue').text(formatMoney(realRevenue));
       $('#dashCapital').text(formatMoney(totalCapital));
       $('#dashLaborCost').text(formatMoney(totalPayroll));
@@ -1460,99 +1302,59 @@
       $('#dashProfitIcon').attr('class', `fas ${isProfit ? 'fa-chart-line' : 'fa-chart-line fa-flip-vertical'} kpi-icon`);
 
       let projHtml = '';
-      const contracts = res.projects || [];
-      contracts.forEach(p => {
-        const rev = p.revenue || 0;
-        const exp = p.expense || 0;
+      (res.projects || []).forEach(p => {
+        const rev = projRevenue[p.name] || 0;
+        const exp = projExpense[p.name] || 0;
         const profit = rev - exp;
         const isPos = profit >= 0;
         const pct = p.budget > 0 ? Math.min((exp / p.budget * 100), 100).toFixed(0) : 0;
         const barColor = pct > 90 ? 'danger' : pct > 70 ? 'warning' : 'success';
-        projHtml += `
-          <tr>
-            <td>
-              <div class="fw-bold" style="font-size:.85rem;">${p.name}</div>
-              <div class="progress mt-1" style="height:4px;">
-                <div class="progress-bar bg-${barColor}" style="width:${pct}%"></div>
-              </div>
-            </td>
-            <td class="text-end text-success" style="font-size:.82rem;white-space:nowrap;">${formatMoney(rev)}</td>
-            <td class="text-end text-danger" style="font-size:.82rem;white-space:nowrap;">${formatMoney(exp)}</td>
-            <td class="text-center">
-              <span class="profit-pill ${isPos ? 'bg-success text-white' : 'bg-danger text-white'}">
-                ${isPos ? '▲' : '▼'} ${formatMoney(Math.abs(profit))}
-              </span>
-            </td>
-          </tr>`;
+        projHtml += `<tr><td><div class="fw-bold" style="font-size:.85rem;">${p.name}</div><div class="progress mt-1" style="height:4px;"><div class="progress-bar bg-${barColor}" style="width:${pct}%"></div></div></td><td class="text-end text-success" style="font-size:.82rem;white-space:nowrap;">${formatMoney(rev)}</td><td class="text-end text-danger" style="font-size:.82rem;white-space:nowrap;">${formatMoney(exp)}</td><td class="text-center"><span class="profit-pill ${isPos ? 'bg-success text-white' : 'bg-danger text-white'}">${isPos ? '▲' : '▼'} ${formatMoney(Math.abs(profit))}</span></td></tr>`;
       });
       $('#projSummaryBody').html(projHtml || '<tr><td colspan="4" class="text-center text-muted py-3">ไม่มีโครงการ</td></tr>');
 
-      const revenueRows = res.revenueRows || [];
-      let revHtml = revenueRows.map(r =>
-        `<tr><td>${r.date}</td><td>${r.item}</td><td>${r.proj}</td><td class="text-end fw-bold text-success">${formatMoney(r.amt)}</td></tr>`
-      ).join('') || '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีรายรับ</td></tr>';
-      $('#revenueDetailBody').html(revHtml);
+      revenueRows.sort((a, b) => b.date.localeCompare(a.date));
+      $('#revenueDetailBody').html(revenueRows.map(r => `<tr><td>${r.date}</td><td>${r.item}</td><td>${r.proj}</td><td class="text-end fw-bold text-success">${formatMoney(r.amt)}</td></tr>`).join('') || '<tr><td colspan="4" class="text-center text-muted">ยังไม่มีรายรับ</td></tr>');
 
-      const capitals = capitalData || [];
-      let capHtml = capitals.map(c =>
-        `<tr>
-          <td>${c.date}</td>
-          <td><span class="capital-badge">${c.source}</span></td>
-          <td>${c.project || c.note || '-'}</td>
-          <td class="text-end fw-bold" style="color:#6a1b9a;">${formatMoney(c.amount)}</td>
-          <td><i class="fas fa-trash text-danger" style="cursor:pointer;" onclick="delCapital('${c.id}')"></i></td>
-        </tr>`
-      ).join('') || '<tr><td colspan="5" class="text-center text-muted">ยังไม่มีการเพิ่มทุน</td></tr>';
-      $('#capitalDetailBody').html(capHtml);
+      capitals.sort((a, b) => b.date.localeCompare(a.date));
+      $('#capitalDetailBody').html(capitals.map(c => `<tr><td>${c.date}</td><td><span class="capital-badge">${c.source}</span></td><td>${c.project || c.note || '-'}</td><td class="text-end fw-bold" style="color:#6a1b9a;">${formatMoney(c.amount)}</td><td><i class="fas fa-trash text-danger" style="cursor:pointer;" onclick="delCapital('${c.id}')"></i></td></tr>`).join('') || '<tr><td colspan="5" class="text-center text-muted">ยังไม่มีการเพิ่มทุน</td></tr>');
 
       if (dashboardChart) dashboardChart.destroy();
       const ctx = document.getElementById('projectChart').getContext('2d');
-      const labels    = ['ภาพรวม', ...contracts.map(p => p.name.substring(0, 14))];
-      const revData   = [realRevenue, ...contracts.map(p => p.revenue || 0)];
-      const expData   = [totalExpense, ...contracts.map(p => p.expense || 0)];
-      dashboardChart  = new Chart(ctx, {
+      const labels = ['ภาพรวม', ...(res.projects || []).map(p => p.name.substring(0, 14))];
+      const revData = [realRevenue, ...(res.projects || []).map(p => projRevenue[p.name] || 0)];
+      const expData = [totalExpense, ...(res.projects || []).map(p => projExpense[p.name] || 0)];
+      dashboardChart = new Chart(ctx, {
         type: 'bar',
-        data: {
-          labels,
-          datasets: [
-            { label: '💵 รายรับจริง (ค่างวดรับแล้ว)', data: revData, backgroundColor: 'rgba(23,165,137,0.8)', borderRadius: 6 },
-            { label: '🧾 รายจ่ายรวม (แรง+วัสดุ+อื่นๆ)', data: expData, backgroundColor: 'rgba(192,57,43,0.8)', borderRadius: 6 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero: true, ticks: { callback: v => formatMoney(v) } } }
-        }
+        data: { labels, datasets: [
+          { label: '💵 รายรับจริง (ค่างวดรับแล้ว)', data: revData, backgroundColor: 'rgba(23,165,137,0.8)', borderRadius: 6 },
+          { label: '🧾 รายจ่ายรวม (แรง+วัสดุ+อื่นๆ)', data: expData, backgroundColor: 'rgba(192,57,43,0.8)', borderRadius: 6 }
+        ]},
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => formatMoney(v) } } } }
       });
-
     } catch (e) { console.error('Dashboard Error:', e); }
   }
 
-  // ==================== EXPENSE REPORT ====================
+  // ==========================================
+  // 📋 EXPENSE REPORT
+  // ==========================================
   async function loadExpenseReport() {
     const m = $('#reportMonth').val();
     if (!m) return;
     $('#loader').show();
     try {
-      const rows = await runGoogle('getExpenseReport', { month: m }) || [];
+      const rows = await runGoogle('getExpenseReport', m) || [];
       $('#printMonthLabel').text(m);
-      let h = `<table class="table table-bordered">
-        <thead><tr class="table-light"><th>วันที่</th><th>รายการ</th><th>โครงการ</th><th class="text-end">ยอดเงิน</th></tr></thead><tbody>`;
+      let h = `<table class="table table-bordered"><thead><tr class="table-light"><th>วันที่</th><th>รายการ</th><th>โครงการ</th><th class="text-end">ยอดเงิน</th></tr></thead><tbody>`;
       let total = 0;
       if (rows.length > 0) {
-        rows.forEach(r => {
-          h += `<tr><td>${r.date || '-'}</td><td>${r.item || '-'}</td><td>${r.loc || '-'}</td><td class="text-end">${formatMoney(r.amount)}</td></tr>`;
-          total += parseFloat(r.amount) || 0;
-        });
+        rows.forEach(r => { h += `<tr><td>${r.date||'-'}</td><td>${r.item||'-'}</td><td>${r.loc||'-'}</td><td class="text-end">${formatMoney(r.amount)}</td></tr>`; total += parseFloat(r.amount) || 0; });
       } else {
         h += `<tr><td colspan="4" class="text-center text-muted">ไม่พบข้อมูลรายจ่ายในเดือนนี้</td></tr>`;
       }
       h += `<tr class="fw-bold table-warning"><td colspan="3" class="text-end">รวมค่าใช้จ่าย:</td><td class="text-end text-danger">${formatMoney(total)}</td></tr></tbody></table>`;
       $('#expenseReportContent').html(h);
     } catch (e) {
-      console.error('Report Error:', e);
       Swal.fire('Error', 'โหลดรายงานไม่สำเร็จ', 'error');
     }
     $('#loader').fadeOut();
